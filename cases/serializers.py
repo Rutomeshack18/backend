@@ -18,52 +18,38 @@ class UserSerializer(serializers.ModelSerializer):
         return user
     
     
-class CourtSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Court
-        fields = ['court_name']
-
-class CaseClassificationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CaseClassification
-        fields = ['case_class']
-
-class ActionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Action
-        fields = ['action_type']
-
-class CitationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Citation
-        fields = ['citation_text']
-
-class CountySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = County
-        fields = ['county_name']
-
-class JudgeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Judge
-        fields = ['judge_name']
-
 class CaseSerializer(serializers.ModelSerializer):
-    court = CourtSerializer()
-    case_classification = CaseClassificationSerializer()
-    action = ActionSerializer()
-    citation = CitationSerializer()
-    county = CountySerializer()
+    court = serializers.SerializerMethodField()
+    case_classification = serializers.SerializerMethodField()
+    action = serializers.SerializerMethodField()
+    citation = serializers.SerializerMethodField()
+    county = serializers.SerializerMethodField()
+
     class Meta:
         model = Case
         fields = [
-            'id',  
+            'id',  # Case ID
             'case_number',
             'date_delivered',
             'full_text',
-            'court',
-            'case_classification',
-            'action',
-            'citation',
-            'county',  
+            'court',               # Flattened court name
+            'case_classification', # Flattened case classification
+            'action',              # Flattened action type
+            'citation',            # Flattened citation text
+            'county',              # Flattened county name
         ]
+
+    def get_court(self, obj):
+        return obj.court.court_name if obj.court else None
+
+    def get_case_classification(self, obj):
+        return obj.case_classification.case_class if obj.case_classification else None
+
+    def get_action(self, obj):
+        return obj.action.action_type if obj.action else None
+
+    def get_citation(self, obj):
+        return obj.citation.citation_text if obj.citation else None
+
+    def get_county(self, obj):
+        return obj.county.county_name if obj.county else None
