@@ -18,42 +18,52 @@ class UserSerializer(serializers.ModelSerializer):
         return user
     
     
-class CaseSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Case
-        fields = '__all__'
-
 class CourtSerializer(serializers.ModelSerializer):
     class Meta:
         model = Court
-        fields = '__all__'
+        fields = ['court_name']
 
 class CaseClassificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = CaseClassification
-        fields = '__all__'
-
-class CountySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = County
-        fields = '__all__'
+        fields = ['case_class']
 
 class ActionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Action
-        fields = '__all__'
+        fields = ['action_type']
 
 class CitationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Citation
-        fields = '__all__'
+        fields = ['citation_text']
+
+class CountySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = County
+        fields = ['county_name']
 
 class JudgeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Judge
-        fields = '__all__'
+        fields = ['judge_name']
 
-class PartySerializer(serializers.ModelSerializer):
+class CaseSerializer(serializers.ModelSerializer):
+    court = CourtSerializer()
+    case_classification = CaseClassificationSerializer()
+    action = ActionSerializer()
+    citation = CitationSerializer()
+    county = CountySerializer()
     class Meta:
-        model = Party
-        fields = '__all__'
+        model = Case
+        fields = [
+            'id',  
+            'case_number',
+            'date_delivered',
+            'full_text',
+            'court',
+            'case_classification',
+            'action',
+            'citation',
+            'county',  
+        ]
