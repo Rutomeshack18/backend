@@ -45,7 +45,7 @@ def summarize_case(request, case_number):
     # Hugging Face API URL and headers
     api_url = "https://api-inference.huggingface.co/models/sshleifer/distilbart-cnn-12-6"
     headers = {
-        "Authorization": f"Bearer {settings.HUGGINGFACE_API_KEY}"  # Use API token from settings
+        "Authorization": f"Bearer {settings.HUGGINGFACE_API_KEY}"  
     }
     
     response = requests.post(api_url, headers=headers, json={"inputs": full_text})
