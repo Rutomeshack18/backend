@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django_filters import rest_framework as filters
 from rest_framework import generics, filters as drf_filters  # Importing SearchFilter here
 from .models import Case
-from .serializers import CaseSerializer
+from .serializers import CaseSerializer, CaseDetailSerializer
 from .serializers import UserSerializer
 from .models import CustomUser
 from rest_framework.response import Response
@@ -10,6 +10,8 @@ from rest_framework.decorators import api_view
 from django.shortcuts import get_object_or_404
 import requests
 from django.conf import settings 
+from django_filters.rest_framework import DjangoFilterBackend
+
 
 def home(request):
     return render(request, 'base.html')
@@ -19,7 +21,7 @@ class UserRegister(generics.CreateAPIView):
     serializer_class = UserSerializer
 
 class CaseFilter(filters.FilterSet):
-    case_number = filters.CharFilter(lookup_expr='icontains')
+    case_number = filters.CharFilter(lookup_expr='icontains')  # Searching with case_number
     date_delivered = filters.DateFilter()
     court = filters.CharFilter(field_name='court__court_name', lookup_expr='icontains')
     county = filters.CharFilter(field_name='county__county_name', lookup_expr='icontains')
@@ -29,11 +31,22 @@ class CaseFilter(filters.FilterSet):
         fields = ['case_number', 'date_delivered', 'court', 'county']
 
 class CaseList(generics.ListAPIView):
-    queryset = Case.objects.all()
+    queryset = Case.objects.select_related(
+        'court', 'case_classification', 'action', 'citation', 'county'
+    ).only(
+        'id', 'case_number', 'date_delivered', 
+        'court__court_name', 'case_classification__case_class', 
+        'action__action_type', 'citation__citation_text', 'county__county_name'
+    )  # Use select_related and only to reduce query size
     serializer_class = CaseSerializer
-    filter_backends = (filters.DjangoFilterBackend, drf_filters.SearchFilter)
+    filter_backends = (DjangoFilterBackend, drf_filters.SearchFilter)
     filterset_class = CaseFilter
     search_fields = ['case_number', 'full_text']
+
+class CaseDetail(generics.RetrieveAPIView):
+    queryset = Case.objects.all()
+    serializer_class = CaseDetailSerializer
+    lookup_field = 'id'
 
 @api_view(['GET'])
 def summarize_case(request, case_number):

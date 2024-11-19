@@ -19,11 +19,11 @@ class UserSerializer(serializers.ModelSerializer):
     
     
 class CaseSerializer(serializers.ModelSerializer):
-    court = serializers.SerializerMethodField()
-    case_classification = serializers.SerializerMethodField()
-    action = serializers.SerializerMethodField()
-    citation = serializers.SerializerMethodField()
-    county = serializers.SerializerMethodField()
+    court = serializers.CharField(source='court.court_name')
+    case_classification = serializers.CharField(source='case_classification.case_class')
+    action = serializers.CharField(source='action.action_type')
+    citation = serializers.CharField(source='citation.citation_text')
+    county = serializers.CharField(source='county.county_name')
 
     class Meta:
         model = Case
@@ -31,25 +31,18 @@ class CaseSerializer(serializers.ModelSerializer):
             'id',  # Case ID
             'case_number',
             'date_delivered',
-            'full_text',
-            'court',               # Flattened court name
-            'case_classification', # Flattened case classification
-            'action',              # Flattened action type
-            'citation',            # Flattened citation text
-            'county',              # Flattened county name
+            'court',
+            'case_classification',
+            'action',
+            'citation',
+            'county',
         ]
 
-    def get_court(self, obj):
-        return obj.court.court_name if obj.court else None
 
-    def get_case_classification(self, obj):
-        return obj.case_classification.case_class if obj.case_classification else None
+class CaseDetailSerializer(serializers.ModelSerializer):
+    case_number = serializers.CharField()  
+    full_text = serializers.CharField()   
 
-    def get_action(self, obj):
-        return obj.action.action_type if obj.action else None
-
-    def get_citation(self, obj):
-        return obj.citation.citation_text if obj.citation else None
-
-    def get_county(self, obj):
-        return obj.county.county_name if obj.county else None
+    class Meta:
+        model = Case
+        fields = ['case_number', 'full_text']
