@@ -13,9 +13,14 @@ import os
 from dotenv import load_dotenv
 from datetime import timedelta
 
-load_dotenv() 
+load_dotenv(".env", override=True)
 from pathlib import Path
 HUGGINGFACE_API_KEY = os.getenv("HUGGINGFACE_API_KEY")
+AZURE_ENDPOINT = os.getenv('AZURE_ENDPOINT')
+AZURE_API_KEY = os.getenv('AZURE_API_KEY')
+DEPLOYMENT_NAME = os.getenv('DEPLOYMENT_NAME')
+API_VERSION = os.getenv('API_VERSION')
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -32,6 +37,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
+CORS_ALLOW_ALL_ORIGINS = True
 
 
 # Application definition
@@ -48,6 +54,7 @@ INSTALLED_APPS = [
     'django_filters',
     'corsheaders',
     'django_rest_passwordreset',
+    'chatbot',
 ]
 
 MIDDLEWARE = [

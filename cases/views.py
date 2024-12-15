@@ -11,6 +11,9 @@ from django.shortcuts import get_object_or_404
 import requests
 from django.conf import settings 
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.pagination import CursorPagination
+from django.http import JsonResponse
+from rest_framework.decorators import api_view
 
 def home(request):
     return render(request, 'base.html')
@@ -29,6 +32,10 @@ class CaseFilter(filters.FilterSet):
         model = Case
         fields = ['case_number', 'date_delivered', 'court', 'county']
 
+class CaseCursorPagination(CursorPagination):
+    page_size = 20
+    ordering = '-id'
+
 class CaseList(generics.ListAPIView):
     queryset = Case.objects.select_related(
         'court', 'case_classification', 'action', 'citation', 'county'
@@ -41,7 +48,9 @@ class CaseList(generics.ListAPIView):
     filter_backends = (DjangoFilterBackend, drf_filters.SearchFilter)
     filterset_class = CaseFilter
     search_fields = ['case_number', 'full_text']
+    pagination_class = CaseCursorPagination
 
+    
 class CaseDetail(generics.RetrieveAPIView):
     queryset = Case.objects.all()
     serializer_class = CaseDetailSerializer
