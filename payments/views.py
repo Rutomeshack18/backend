@@ -7,11 +7,13 @@ from django.conf import settings
 from payments.models import Payment
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import get_object_or_404
+from django.contrib.auth.decorators import login_required
 
 api_key = settings.PAYSTACK_SECRET_KEY
 url = settings.PAYSTACK_INITIALIZE_PAYMENT_URL
 
 @csrf_exempt
+@login_required
 def payment_init(request):
     if request.method == 'POST':
         # Get form data if POST request
