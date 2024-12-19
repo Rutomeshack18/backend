@@ -32,9 +32,9 @@ class CaseFilter(filters.FilterSet):
         model = Case
         fields = ['case_number', 'date_delivered', 'court', 'county']
 
-class CaseCursorPagination(CursorPagination):
-    page_size = 20
-    ordering = '-id'
+# class CaseCursorPagination(CursorPagination):
+#     page_size = 20
+#     ordering = '-id'
 
 class CaseList(generics.ListAPIView):
     queryset = Case.objects.select_related(
@@ -48,7 +48,7 @@ class CaseList(generics.ListAPIView):
     filter_backends = (DjangoFilterBackend, drf_filters.SearchFilter)
     filterset_class = CaseFilter
     search_fields = ['case_number', 'full_text']
-    pagination_class = CaseCursorPagination
+    # pagination_class = CaseCursorPagination
 
     
 class CaseDetail(generics.RetrieveAPIView):
