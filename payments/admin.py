@@ -4,6 +4,6 @@ from .models import Payment
 @admin.register(Payment)
 class PaymentAdmin(admin.ModelAdmin):
     list_display = [
-        'id', 'first_name', 'last_name', 'email', 'paid', 'updated',
+        'fullname', 'email', 'phone', 'plan', 'paid', 'updated',
     ]
     list_filter = ['paid', 'created', 'updated']

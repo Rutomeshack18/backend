@@ -1,11 +1,11 @@
 from django.db import models
 
 class Payment(models.Model):
-    first_name = models.CharField(max_length=50)
-    last_name = models.CharField(max_length=50)
-    email = models.EmailField()
+    fullname = models.CharField(max_length=100)  
+    email = models.EmailField()                
+    phone = models.CharField(max_length=15, default="N/A")      
+    plan = models.CharField(max_length=50)     
     amount = models.DecimalField(max_digits=10, decimal_places=2)
-    city = models.CharField(max_length=100, default="Unknown") 
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     paystack_ref = models.CharField(max_length=15, blank=True)
