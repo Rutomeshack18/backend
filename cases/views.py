@@ -14,6 +14,14 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.pagination import CursorPagination
 from django.http import JsonResponse
 from rest_framework.decorators import api_view
+import json
+import logging
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from openai import AzureOpenAI
+logger = logging.getLogger(__name__)
+from django.conf import settings
+
 
 def home(request):
     return render(request, 'base.html')
@@ -56,13 +64,18 @@ class CaseDetail(generics.RetrieveAPIView):
     serializer_class = CaseDetailSerializer
     lookup_field = 'id'
 
-@api_view(['GET'])
+client = AzureOpenAI(
+  azure_endpoint = settings.AZURE_ENDPOINT,
+  api_key=settings.AZURE_API_KEY,  
+  api_version=settings.API_VERSION
+)
+
+@csrf_exempt
 def summarize_case(request, case_number):
     case = get_object_or_404(Case, case_number=case_number)
 
-    # Add clear instruction markers
+    # Construct the summarization instructions
     input_text = (
-        "### Instructions\n"
         "Summarize the case text with the following details in 200-300 words: "
         "1. Case type. "
         "2. Case number. "
@@ -70,22 +83,38 @@ def summarize_case(request, case_number):
         "4. The court in which the case was adjudicated or is ongoing. "
         "5. A brief description of the case. "
         "6. Any decisions made, if a ruling has been given.\n\n"
-        "### Case Text\n"
-        f"{case.full_text}"
+        f"Case Text:\n{case.full_text}"
     )
 
-    # Hugging Face API URL and headers
-    api_url = "https://api-inference.huggingface.co/models/sshleifer/distilbart-cnn-12-6"
-    headers = {"Authorization": f"Bearer {settings.HUGGINGFACE_API_KEY}"}
+    # Construct the prompt for Azure OpenAI
+    conversation = [
+        {
+            "role": "system",
+            "content": "You are a legal assistant specializing in summarizing case texts. "
+                       "Follow the provided instructions and ensure the summary is concise."
+        },
+        {"role": "user", "content": input_text}
+    ]
 
     try:
-        response = requests.post(api_url, headers=headers, json={"inputs": input_text})
-        response.raise_for_status()
-        summary = response.json()[0].get('summary_text', "No summary available")
-        
-    except requests.exceptions.RequestException as e:
-        return Response({"error": "Failed to summarize the text", "details": str(e)}, status=500)
-    except (KeyError, IndexError):
-        return Response({"error": "Unexpected response from summarization API"}, status=500)
+        # Call Azure OpenAI
+        response = client.chat.completions.create(
+            model=settings.DEPLOYMENT_NAME,  # Model deployment name
+            messages=conversation,
+            max_tokens=300,  # Adjust based on desired summary length
+            temperature=0.5,
+            top_p=0.95,
+            frequency_penalty=0,
+            presence_penalty=0
+        )
 
-    return Response({"case_number": case.case_number, "summary": summary})
+        # Extract the assistant's summary
+        if response.choices:
+            summary = response.choices[0].message.content
+            return JsonResponse({"case_number": case.case_number, "summary": summary})
+        else:
+            return JsonResponse({"error": "No response from AI model."}, status=500)
+
+    except Exception as e:
+        logger.error(f"Error summarizing case: {str(e)}")
+        return JsonResponse({"error": f"Internal error: {str(e)}"}, status=500)
