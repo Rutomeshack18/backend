@@ -20,6 +20,13 @@ AZURE_ENDPOINT = os.getenv('AZURE_ENDPOINT')
 AZURE_API_KEY = os.getenv('AZURE_API_KEY')
 DEPLOYMENT_NAME = os.getenv('DEPLOYMENT_NAME')
 API_VERSION = os.getenv('API_VERSION')
+EMAIL_BACKEND = os.getenv('EMAIL_BACKEND')
+EMAIL_HOST = os.getenv('EMAIL_HOST')
+EMAIL_PORT = os.getenv('EMAIL_PORT')
+EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL')
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL')
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -189,3 +196,4 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'cases.CustomUser'
 LOGIN_URL = '/api/token/'
+
