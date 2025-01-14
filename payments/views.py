@@ -13,7 +13,7 @@ api_key = settings.PAYSTACK_SECRET_KEY
 url = settings.PAYSTACK_INITIALIZE_PAYMENT_URL
 
 @csrf_exempt
-@login_required
+# @login_required
 def payment_init(request):
     if request.method == 'POST':
         # Get form data if POST request
