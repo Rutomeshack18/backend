@@ -1,59 +1,37 @@
-from django.shortcuts import redirect, render
-from django.contrib import messages
-from .forms import PaymentInitForm
-import json
-import requests
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 from django.conf import settings
-from payments.models import Payment
-from django.views.decorators.csrf import csrf_exempt
-from django.shortcuts import get_object_or_404
-from django.contrib.auth.decorators import login_required
+import requests
 
-api_key = settings.PAYSTACK_SECRET_KEY
-url = settings.PAYSTACK_INITIALIZE_PAYMENT_URL
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])  # Ensure only logged-in users can call the API
+def initialize_payment(request):
+    """
+    Accepts email and amount from the frontend, initializes Paystack payment, and returns the payment link.
+    """
+    data = request.data
+    email = data.get('email')
+    amount = data.get('amount')  # Amount should be in Naira
 
-@csrf_exempt
-@login_required
-def payment_init(request):
-    if request.method == 'POST':
-        # Get form data if POST request
-        form = PaymentInitForm(request.POST)
+    if not email or not amount:
+        return Response({'error': 'Email and amount are required.'}, status=400)
 
-        # Validate form before saving
-        if form.is_valid():
-            payment = form.save(commit=False)
-            payment.save()
+    try:
+        paystack_url = settings.PAYSTACK_INITIALIZE_PAYMENT_URL
+        headers = {"Authorization": f"Bearer {settings.PAYSTACK_SECRET_KEY}"}
+        payload = {
+            "email": email,
+            "amount": int(amount) * 100  # Convert to kobo
+        }
 
-            # Set the payment in the current session
-            request.session['payment_id'] = payment.id
+        response = requests.post(paystack_url, headers=headers, json=payload)
+        response_data = response.json()
 
-            # Prepare Paystack checkout session
-            payment_id = request.session.get('payment_id', None)
-            payment = get_object_or_404(Payment, id=payment_id)
-            amount = payment.get_amount()
-
-            # Paystack session data (no success or cancel URLs here)
-            session_data = {
-                'email': payment.email,
-                'amount': int(amount * 100)
-            }
-
-            headers = {"authorization": f"Bearer {api_key}"}
-            # API request to Paystack server
-            r = requests.post(url, headers=headers, data=session_data)
-            response = r.json()
-
-            if response.get("status"):
-                try:
-                    redirect_url = response["data"]["authorization_url"]
-                    return redirect(redirect_url, code=303)  # Redirect directly to Paystack
-                except KeyError:
-                    messages.error(request, "Failed to fetch Paystack URL.")
-            else:
-                messages.error(request, "Failed to initialize payment.")
+        if response_data.get("status"):
+            return Response({"payment_url": response_data["data"]["authorization_url"]}, status=200)
         else:
-            messages.error(request, "Form submission failed.")
-    else:
-        form = PaymentInitForm()
-
-    return render(request, 'payments/create.html', {'form': form})
+            return Response({"error": "Failed to initialize payment with Paystack."}, status=500)
+    
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
