@@ -21,6 +21,8 @@ from django.views.decorators.csrf import csrf_exempt
 from openai import AzureOpenAI
 logger = logging.getLogger(__name__)
 from django.conf import settings
+from .users import UpdateUserDetails, DeleteUserAccount
+from .serializers import UserSerializer
 
 
 def home(request):
@@ -29,6 +31,7 @@ def home(request):
 class UserRegister(generics.CreateAPIView):
     queryset = CustomUser.objects.all()
     serializer_class = UserSerializer
+
 
 class CaseFilter(filters.FilterSet):
     case_number = filters.CharFilter(lookup_expr='icontains')  # Searching with case_number
