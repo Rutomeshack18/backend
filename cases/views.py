@@ -23,7 +23,34 @@ logger = logging.getLogger(__name__)
 from django.conf import settings
 from .users import UpdateUserDetails, DeleteUserAccount
 from .serializers import UserSerializer
+from django.contrib.auth import get_user_model
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import RefreshToken
+from allauth.socialaccount.models import SocialAccount
+from dj_rest_auth.registration.views import SocialLoginView
+from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
 
+User = get_user_model()
+
+class GoogleLoginView(SocialLoginView):
+    adapter_class = GoogleOAuth2Adapter
+
+    def get_tokens_for_user(self, user):
+        refresh = RefreshToken.for_user(user)
+        return {
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+        }
+
+    def post(self, request, *args, **kwargs):
+        response = super().post(request, *args, **kwargs)
+        user = self.user
+        if user:
+            tokens = self.get_tokens_for_user(user)
+            return Response({'tokens': tokens, 'user': {'email': user.email, 'name': user.get_full_name()}})
+        return Response({'error': 'Authentication failed'}, status=400)
+    
 
 def home(request):
     return render(request, 'base.html')

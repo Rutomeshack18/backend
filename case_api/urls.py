@@ -17,11 +17,13 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from cases.views import home
+from cases.views import GoogleLoginView
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('cases.urls')),
     path('', home, name='home'),
     path('', include('chatbot.urls')),
-    path('', include('payments.urls')),
-    path('accounts/', include('allauth.urls')), 
+    path('', include('payments.urls')), 
+    path('api/google-login/', GoogleLoginView.as_view(), name='google_login'),
 ]
