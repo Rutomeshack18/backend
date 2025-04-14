@@ -5,7 +5,7 @@ from django.conf import settings
 import requests
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])  # Ensure only logged-in users can call the API
+@permission_classes([IsAuthenticated])  # only logged-in users 
 def initialize_payment(request):
     """
     Accepts email, amount, fullname, phone, and plan details from the frontend, initializes Paystack payment, 
@@ -16,7 +16,7 @@ def initialize_payment(request):
     email = data.get('email')
     phone = data.get('phone')
     plan = data.get('plan')
-    amount = data.get('amount')  # Amount should be in Naira
+    amount = data.get('amount')  
 
     # Validate required fields
     if not email or not amount:
@@ -34,7 +34,7 @@ def initialize_payment(request):
         # Create payload with all the necessary data
         payload = {
             "email": email,
-            "amount": int(amount) * 100,  # Convert to kobo
+            "amount": int(amount) * 100,  
             "metadata": {
                 "fullname": fullname,
                 "phone": phone,
